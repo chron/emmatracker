@@ -48,8 +48,6 @@ export const action: ActionFunction = async ({ request, params }) => {
     .from<PersonSticker>("people_stickers")
     .insert(newRecord);
 
-  console.log(response);
-
   return null;
 };
 
@@ -57,13 +55,15 @@ export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesUrl }];
 };
 
+const START_WEEK = 3;
+
 export default function Index() {
   const { records } = useLoaderData<{ records: PersonSticker[] }>();
   const [showLoader, setShowLoader] = React.useState<number | null>(null);
   const today = DateTime.now();
 
   // TODO: support multi-year
-  const weeks = new Array(today.weekNumber).fill(null).map((_, i) => today.weekNumber - i);
+  const weeks = new Array(today.weekNumber - START_WEEK).fill(null).map((_, i) => today.weekNumber - i);
 
   return (
     <main>
