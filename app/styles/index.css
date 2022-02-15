@@ -41,3 +41,21 @@
   z-index: 2;
   fill: var(--sticker-color);
 }
+
+.login-link {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  font-size: 0.8rem;
+  background-color: black;
+  color: white;
+  padding: 0.3rem 0.5rem;
+  border-top-left-radius: 0.4rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.login-link:hover {
+  background-color: #e879f9;
+  color: black;
+}

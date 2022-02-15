@@ -1,4 +1,4 @@
-import { LoaderFunction, useLoaderData, LinksFunction, Form, ActionFunction } from "remix";
+import { LoaderFunction, useLoaderData, LinksFunction, ActionFunction, Link } from "remix";
 import { supabase } from "../../lib/supabaseClient";
 import { PersonSticker } from "../../models/PersonSticker";
 import { DateTime } from "luxon";
@@ -81,6 +81,8 @@ export default function Index() {
 
   return (
     <main>
+      {!isLoggedIn ? <Link className="login-link" to="login">Login</Link> : null}
+
       <h1>emmatracker™</h1>
 
       {error ? <div className="error">{error}</div> : null}
