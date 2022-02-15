@@ -79,3 +79,9 @@ button {
   white-space: nowrap;
   cursor: pointer;
 }
+
+.error {
+  color: #be185d;
+  font-weight: bold;
+  text-align: center;
+}

@@ -8,30 +8,44 @@ import React from "react";
 import AddWidget from "~/components/AddWidget";
 import { Person } from "models/person";
 import { Sticker as StickerModel } from "models/sticker";
+import { getSession } from "~/sessions";
 
-export const loader: LoaderFunction = async () => {
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(
+    request.headers.get("Cookie")
+  );
+  const isLoggedIn = session.has('userId');
+
   const { data: records, error: recordError } = await supabase
     .from<PersonSticker>("people_stickers")
     .select("id, year, week, people (id, name, color), stickers (id, name, svg_path, svg_viewbox)");
 
-  if (recordError) { throw recordError; }
+  if (recordError) { return { error: recordError }; }
 
   const { data: people, error: peopleError } = await supabase
     .from<Person>("people")
     .select("id, name, color");
 
-    if (peopleError) { throw peopleError; }
+    if (peopleError) { return { error: peopleError }; }
 
   const { data: stickers, error: stickerError } = await supabase
     .from<StickerModel>("stickers")
     .select("id, name, svg_path, svg_viewbox");
 
-  if (stickerError) { throw stickerError; }
+  if (stickerError) { return { error: stickerError }; }
 
-  return { records, stickers, people };
+  return { records, stickers, people, isLoggedIn };
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
+  const session = await getSession(
+    request.headers.get("Cookie")
+  );
+
+  if (!session.has('userId')) {
+    return { error: 'Not logged in' };
+  }
+
   const formData = await request.formData();
 
   const newRecord = {
@@ -41,8 +55,8 @@ export const action: ActionFunction = async ({ request, params }) => {
     sticker_id: formData.get('sticker_id')
   };
 
-  if (!newRecord.people_id) { throw { message: 'select a person' }}
-  if (!newRecord.sticker_id) { throw { message: 'select a sticker type' }}
+  if (!newRecord.people_id) { return { error: 'select a person' }}
+  if (!newRecord.sticker_id) { return { error: 'select a sticker type' }}
 
   const response = await supabase
     .from<PersonSticker>("people_stickers")
@@ -55,25 +69,28 @@ export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesUrl }];
 };
 
-const START_WEEK = 3;
+const SKIP_WEEKS = 6;
 
 export default function Index() {
-  const { records } = useLoaderData<{ records: PersonSticker[] }>();
+  const { records, error, isLoggedIn } = useLoaderData<{ records: PersonSticker[], error?: string, isLoggedIn: boolean }>();
   const [showLoader, setShowLoader] = React.useState<number | null>(null);
   const today = DateTime.now();
 
   // TODO: support multi-year
-  const weeks = new Array(today.weekNumber - START_WEEK).fill(null).map((_, i) => today.weekNumber - i);
+  const weeks = new Array(today.weekNumber - SKIP_WEEKS).fill(null).map((_, i) => today.weekNumber - i);
 
   return (
     <main>
       <h1>emmatracker™</h1>
+
+      {error ? <div className="error">{error}</div> : null}
 
       <div className="calendar">
         {weeks.map(w => {
           const matches = records.filter(r => r.year === 2022 && r.week === w);
           const startDate = DateTime.fromObject({ weekYear: 2022, weekNumber: w });
           const endDate = startDate.plus({ days: 6 });
+
 
           return (
             <React.Fragment key={w}>
@@ -101,7 +118,7 @@ export default function Index() {
                   />
                 </div>
               ) : (
-                <button onClick={() => setShowLoader(w)}>+</button>
+                isLoggedIn ? <button onClick={() => setShowLoader(w)}>+</button> : <div />
               )}
             </React.Fragment>
           );

@@ -1,0 +1,16 @@
+.login__wrapper {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.login__form label {
+  font-size: 0.8rem;
+}
